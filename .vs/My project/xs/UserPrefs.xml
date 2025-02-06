@@ -1,0 +1,18 @@
+﻿<Properties StartupConfiguration="{32C3BDE6-E125-3128-82C1-25D0441455A3}|">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/LetterCubeController.cs">
+    <Files>
+      <File FileName="Assets/Scripts/LetterCubeController.cs" Line="414" Column="1" />
+      <File FileName="Assets/Scripts/QuadInfo.cs" />
+      <File FileName="Assets/Scripts/LetterSelectQuadController.cs" />
+      <File FileName="Assets/Scripts/WordLoader.cs" />
+      <File FileName="Assets/Scripts/GameController.cs" Line="80" Column="51" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.ItemProperties.Assembly-CSharp PreferredExecutionTarget="2af37525-a44a-4452-b4c6-4b44b685d19c" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+</Properties>
