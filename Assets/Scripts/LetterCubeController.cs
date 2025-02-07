@@ -22,7 +22,7 @@ public class LetterCubeController : MonoBehaviour
     const int U = 4;
     const int D = 5;
 
-
+    public float fallSpeed = 1f;
     public Material material;
 
     public Material transparentMaterial;
@@ -33,21 +33,19 @@ public class LetterCubeController : MonoBehaviour
 
     public QuadInfo[] children = new QuadInfo[6];
 
-
-    private int[] textureIndices = new int[6] {5, 1, 11, 17, 20, 3 };    
-
     private bool canRotate = true;
     private bool canMove = true;
 
-    private List<int> vowelIndices = new List<int> {0, 5, 8, 14, 20 };
+    private bool isCurrentLetterCube;
 
     public Color color;
 
     bool transparent = false;
 
-    int uniqueIdentifier;
 
-    public bool hasStarted = false;
+    public bool hasStarted = true;
+    
+
 
     void Start()
     {
@@ -102,7 +100,7 @@ public class LetterCubeController : MonoBehaviour
             childIndex++;
 
         }
-        hasStarted = true;
+        isCurrentLetterCube = true;       
     }
 
     public void setTransparency(bool t)
@@ -375,6 +373,17 @@ public class LetterCubeController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, Vector3.down, out hit, 0.51f))
+        {
+            if(hit.collider.tag != "letter_cube")
+            {
+                fallSpeed = 0f;
+            }            
+                Debug.Log($"Hit: {hit.collider.tag}");                                       
+        }
+        transform.Translate(Vector3.down * Time.deltaTime * fallSpeed, Space.World);
         if (CanRotate())
         {
             if (Input.GetKeyUp(KeyCode.DownArrow))

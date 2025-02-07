@@ -637,7 +637,7 @@ GameObject:
   - component: {fileID: 6603404148507097381}
   m_Layer: 0
   m_Name: LetterCube
-  m_TagString: Untagged
+  m_TagString: letter_cube
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -675,7 +675,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4d8ea625e0814f9d8a08face60d32b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameControllerObject: {fileID: 0}
+  fallSpeed: 1
   material: {fileID: 2100000, guid: 1279ecbe35f944779b89bbf598448cdf, type: 2}
   transparentMaterial: {fileID: 2100000, guid: 4606cedf8d9904b47befbefdbad59bcd, type: 2}
   textures:
@@ -714,6 +714,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   color: {r: 1, g: 0.7088325, b: 0, a: 0}
+  hasStarted: 1
 --- !u!65 &6603404148507097381
 BoxCollider:
   m_ObjectHideFlags: 0
