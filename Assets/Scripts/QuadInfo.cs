@@ -7,14 +7,14 @@ public class QuadInfo: MonoBehaviour
     GameObject quad;
     string letter;
     Material mainMaterial;
-    Material transparentMaterial;
+    Material strikeMaterial;
 
     public QuadInfo(GameObject q, string l, Material mM, Material tM)
     {
         quad = q;
         letter = l;
         mainMaterial = mM;
-        transparentMaterial = tM;
+        strikeMaterial = tM;
     }
 
     public GameObject getQuad()
@@ -32,8 +32,8 @@ public class QuadInfo: MonoBehaviour
         return mainMaterial;
     }
 
-    public Material getTransparentMaterial()
+    public Material getStrikeMaterial()
     {
-        return transparentMaterial;
+        return strikeMaterial;
     }
 }
