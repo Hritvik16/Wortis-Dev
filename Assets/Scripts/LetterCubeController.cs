@@ -1,9 +1,32 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+// using System.Reflection.Emit;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class LetterCubeController : MonoBehaviour    
 {
+
+    Dictionary<string, int> letterToPoints = new Dictionary<string, int>()
+    {
+        {"A", 1}, {"B", 3}, {"C", 2}, {"D", 2},
+        {"E", 1}, {"F", 4}, {"G", 3}, {"H", 4},
+        {"I", 1}, {"J", 8}, {"K", 5}, {"L", 1},
+        {"M", 2}, {"N", 1}, {"O", 1}, {"P", 3},
+        {"Q", 8}, {"R", 1}, {"S", 1}, {"T", 1},
+        {"U", 1}, {"V", 4}, {"W", 4}, {"X", 10},
+        {"Y", 4}, {"Z", 8}
+
+    };
+
+    public string Letter
+    {
+        get
+        {
+            return getLetterInFront();
+        }
+    }
 
     Dictionary<string, int> consonantLetterToIndex = new Dictionary<string, int>() {
         {"B", 1}, {"C", 2}, {"D", 3}, {"F", 5}, {"G", 6}, {"H", 7}, {"J", 9},
@@ -11,6 +34,13 @@ public class LetterCubeController : MonoBehaviour
         {"T", 19}, {"V", 21}, {"W", 22}, {"X", 23}, {"Y", 24}, {"Z", 25}
     };
 
+    Dictionary<string, int> letterToIndex = new Dictionary<string, int>()
+    {
+        {"A", 0}, {"B", 1}, {"C", 2}, {"D", 3}, {"E", 4}, {"F", 5}, {"G", 6}, {"H", 7},
+        {"I", 8}, {"J", 9}, {"K", 10}, {"L", 11}, {"M", 12}, {"N", 13}, {"O", 14}, {"P", 15},
+        {"Q", 16}, {"R", 17}, {"S", 18}, {"T", 19}, {"U", 20}, {"V", 21}, {"W", 22}, {"X", 23},
+        {"Y", 24}, {"Z", 25}
+    };
     Dictionary<string, int> vowelLetterToIndex = new Dictionary<string, int>()
     {
         {"A", 0}, {"E", 4}, {"I", 8}, {"O", 14}, {"U", 20}
@@ -25,27 +55,38 @@ public class LetterCubeController : MonoBehaviour
     public float fallSpeed = 1f;
     public Material material;
 
-    public Material transparentMaterial;
+    public Material strikeMaterial;
 
     public List<Texture2D > textures;
+
+    public List<Texture2D> strikeTextures;
 
     public float time = 0.2f;
 
     public QuadInfo[] children = new QuadInfo[6];
 
-    private bool canRotate = true;
-    private bool canMove = true;
+    // private bool canRotate = true;
+    // private bool canMove = true;
 
-    private bool isCurrentLetterCube;
+    // private bool isCurrentLetterCube;
 
     public Color color;
 
     bool transparent = false;
 
 
-    public bool hasStarted = true;
-    
+    private bool hasStarted = false;
 
+    private bool hasRegisteredLastDownCollision = false;
+
+    private const float settleThreshold = 0.02f;
+
+    public bool isStruck = false;
+
+    void Awake()
+    {
+        
+    }
 
     void Start()
     {
@@ -57,12 +98,12 @@ public class LetterCubeController : MonoBehaviour
         {
             Material mat = new Material(material);
 
-            Material transparentMat = new Material(transparentMaterial);
+            Material strikeMat = new Material(strikeMaterial);
 
             List<string> keyList = new List<string>(consonantLetterToIndex.Keys);
 
 
-            string letter = keyList[Random.Range(0, keyList.Count)];
+            string letter = keyList[UnityEngine.Random.Range(0, keyList.Count)];
             int textureIndex = consonantLetterToIndex[letter];
 
             if(Random.Range(1, 10) >= 6)
@@ -73,7 +114,7 @@ public class LetterCubeController : MonoBehaviour
                 textureIndex = vowelLetterToIndex[letter];
 
                 mat.SetTexture("_MainTex", textures[textureIndex]);
-                transparentMat.SetTexture("_MainTex", textures[textureIndex]);
+                strikeMat.SetTexture("_MainTex", strikeTextures[textureIndex]);
 
                 vowelLetterToIndex.Remove(letter);
 
@@ -81,26 +122,32 @@ public class LetterCubeController : MonoBehaviour
                 //face.material.SetFloat("_Mode", 3); // SET QUAD TO TRANSPARENT
 
 
-                children[childIndex] = new QuadInfo(face.gameObject, letter, mat, transparentMat);
+                children[childIndex] = new QuadInfo(face.gameObject, letter, mat, strikeMat);
 
                 childIndex++;
                 continue;
 
             }
             mat.SetTexture("_MainTex", textures[textureIndex]);
-            transparentMat.SetTexture("_MainTex", textures[textureIndex]);
+            strikeMat.SetTexture("_MainTex", textures[textureIndex]);
 
             consonantLetterToIndex.Remove(letter);
 
 
             face.material = mat;
 
-            children[childIndex] = new QuadInfo(face.gameObject, letter, mat, transparentMat);
+            children[childIndex] = new QuadInfo(face.gameObject, letter, mat, strikeMat);
 
             childIndex++;
 
         }
-        isCurrentLetterCube = true;       
+        // isCurrentLetterCube = true;       
+        hasStarted = true;
+    }
+
+    public bool getHasStarted()
+    {
+        return hasStarted;
     }
 
     public void setTransparency(bool t)
@@ -111,7 +158,7 @@ public class LetterCubeController : MonoBehaviour
             foreach (QuadInfo childQuadInfo in children)
             {
                 //Debug.Log("yeah");
-                childQuadInfo.getQuad().GetComponent<MeshRenderer>().material = childQuadInfo.getTransparentMaterial();
+                childQuadInfo.getQuad().GetComponent<MeshRenderer>().material = childQuadInfo.getStrikeMaterial();
                 //Debug.Log(childQuadInfo.getQuad().GetComponent<MeshRenderer>().material.GetFloat("_Mode"));
                 //Debug.Log(childQuadInfo.getQuad().name);
             }
@@ -137,6 +184,7 @@ public class LetterCubeController : MonoBehaviour
         int i = 0;
         foreach (QuadInfo child in children)
         {
+            // Debug.Log(child);
             letters[i] = child.getLetter();
             i++;
         }
@@ -208,39 +256,31 @@ public class LetterCubeController : MonoBehaviour
         }
     }
 
-    void QuadCollisionDetected(string letter)
-    {        
-        //if(children[D].getLetter().Equals(letter))
-        //{
-        //    Debug.Log(letter);
-        //    canRotate = false;
-        //}
-    }
 
-    public bool CanRotate()
-    {
-        return canRotate;
-    }
+    // public bool CanRotate()
+    // {
+    //     return canRotate;
+    // }
 
-    public void SetCanRotateToFalse()
-    {
-        canRotate = false;
-    }
+    // public void SetCanRotateToFalse()
+    // {
+    //     canRotate = false;
+    // }
 
-    public void SetCanMoveToFalse()
-    {
-        canMove = false;
-    }
+    // public void SetCanMoveToFalse()
+    // {
+    //     canMove = false;
+    // }
 
-    public void SetCanMoveToTrue()
-    {
-        canMove = true;
-    }
+    // public void SetCanMoveToTrue()
+    // {
+    //     canMove = true;
+    // }
 
-    public bool CanMove()
-    {
-        return canMove;
-    }
+    // public bool CanMove()
+    // {
+    //     return canMove;
+    // }
 
     void QuadTextureRotation(Vector3 axis)
     {
@@ -325,17 +365,6 @@ public class LetterCubeController : MonoBehaviour
             children[L] = tempF;
 
             children[R] = tempB;
-
-
-            //  clockwise for children[D]
-
-            //Texture2D texture = children[D].GetComponent<MeshRenderer>().material.GetTexture("_MainTex") as Texture2D;
-            //children[D].GetComponent<MeshRenderer>().material.SetTexture("_MainTex", RotateTexture(texture, true));
-
-            //// counter clockwise for children[U]
-
-            //texture = children[U].GetComponent<MeshRenderer>().material.GetTexture("_MainTex") as Texture2D;
-            //children[U].GetComponent<MeshRenderer>().material.SetTexture("_MainTex", RotateTexture(texture, false));
         }
     }
 
@@ -370,53 +399,212 @@ public class LetterCubeController : MonoBehaviour
         return children[F].getLetter();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void SetFallSpeed(float speed)
     {
-        
-        RaycastHit hit;
-        if (Physics.Raycast(transform.position, Vector3.down, out hit, 0.51f))
-        {
-            if(hit.collider.tag != "letter_cube")
-            {
-                fallSpeed = 0f;
-            }            
-                Debug.Log($"Hit: {hit.collider.tag}");                                       
-        }
-        transform.Translate(Vector3.down * Time.deltaTime * fallSpeed, Space.World);
-        if (CanRotate())
-        {
-            if (Input.GetKeyUp(KeyCode.DownArrow))
-            {
-                Rotate(Vector3.right);
-            }
-
-            if (Input.GetKeyUp(KeyCode.UpArrow))
-            {
-                Rotate(Vector3.left);
-            }
-
-            if (Input.GetKeyUp(KeyCode.LeftArrow))
-            {
-                Rotate(Vector3.down);
-            }
-
-            if (Input.GetKeyUp(KeyCode.RightArrow))
-            {
-                Rotate(Vector3.up);
-            }
-        }        
+        fallSpeed = speed;
     }
 
-    private void OnMouseOver()
+    public float getFallSpeed()
     {
-        //Debug.Log("Mouse is over");
-        //Debug.Log(GameObject.Find("GameController").GetComponent<GameController>());
-        if (transparent && Input.GetButton("Fire1"))
+        return fallSpeed;
+    }
+
+    public bool leftColliding() {
+        Vector3 rayStartPosition = transform.position + (Vector3.down * 0.49f) + (Vector3.left * 0.49f);
+        return isCollidingInDirection(rayStartPosition, Vector3.left, Color.white);
+    }
+
+    public bool rightColliding() {
+
+        Vector3 rayStartPosition = transform.position + (Vector3.down * 0.49f) + (Vector3.right * 0.49f);
+        return isCollidingInDirection(rayStartPosition, Vector3.right, Color.blue);
+    }
+
+    public bool downColliding()
+    {
+        
+        Vector2 belowPosition = new Vector2(transform.position.x, Mathf.Floor(transform.position.y) - 1);
+
+        // Check if floor
+        if (belowPosition.y <= 0)
         {
-            //Debug.Log("Fired over transparent cube");
-            GameObject.Find("GameController").GetComponent<GameController>().TransparentLetterCubeClicked(this);
+            return true; // Floor at y = -1 or 0
         }
+
+        // Check if another cube is already there
+        return LetterCubeDataSet.SharedInstance.HasCubeAt(belowPosition);
+        // Vector3 rayStartPosition = transform.position + Vector3.down * .49f;
+        // Vector3 direction = Vector3.down;
+        // float rayLength = Mathf.Max(0.1f, Time.deltaTime * fallSpeed + 0.05f);
+
+        // Debug.DrawRay(rayStartPosition, direction * rayLength, color);
+
+        // RaycastHit hit;
+
+        // if (Physics.Raycast(rayStartPosition, direction, out hit, rayLength))
+        // {
+        //     Debug.DrawRay(rayStartPosition, direction * hit.distance, color);
+        //     // Debug.Log(hit.collider.gameObject.name);
+        //     return true;
+        // }
+        // Debug.DrawRay(rayStartPosition, direction * rayLength, color);
+        // return false;
+    }
+
+    private bool isCollidingInDirection(Vector3 rayStartPosition, Vector3 direction, Color color)
+    {
+        // Vector3 rayStartPosition = transform.position + Vector3.down * .501f;
+        float rayLength = 0.1f;
+        Debug.DrawRay(rayStartPosition, direction * rayLength, color);
+        RaycastHit hit;
+      
+        if (Physics.Raycast(rayStartPosition, direction, out hit, rayLength))
+        {
+            Debug.DrawRay(rayStartPosition, direction * hit.distance, color);
+            // Debug.Log(hit.collider.gameObject.name);
+            return true;
+        }
+        Debug.DrawRay(rayStartPosition, direction * rayLength, color);
+        return false;
+    }
+
+    public void setStrikeMaterial()
+    {
+        int textureToIndex = letterToIndex[children[F].getLetter()];
+        // Debug.Log(textureToIndex);
+        // Debug.Log("Striking letter cube with letter: " + children[F].getLetter() + "strike material: " + strikeTextures[textureToIndex].name);
+        StartCoroutine(FadeOutAndIn(children[F].getQuad().GetComponent<MeshRenderer>().material, strikeTextures[textureToIndex]));//, destroyAfter));
+       
+        isStruck = true;   
+    }
+
+    public void resetMaterial()
+    {
+        // Debug.Log("Unstriking letter cube with letter: " + children[F].getLetter());
+        StartCoroutine(FadeOutAndIn(children[F].getQuad().GetComponent<MeshRenderer>().material, textures[letterToIndex[children[F].getLetter()]]));//, false));
+       
+        isStruck = false;
+    }
+    public void DestroyLetterCube()
+    {
+        // Calculate points here using front letter
+        LetterCubeDataSet.SharedInstance.addPoints(letterToPoints[getLetterInFront()]);
+        Destroy(gameObject);
+    }
+    
+    IEnumerator FadeOutAndIn(Material mat, Texture newTexture)//, bool destroyAfter)
+    {
+        // Debug.Log(newTexture.name);
+        float duration = 0.3f;
+        float elapsed = 0f;
+
+        Color tint = mat.color;
+
+        // Fade to black (multiply to 0)
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float value = 1.0f - t;  // goes from 1 to 0
+            tint.r = tint.g = tint.b = value;
+            tint.a = 1.0f;  // alpha stays full
+            mat.color = tint;
+            yield return null;
+        }
+
+        // Swap texture at black point
+        mat.SetTexture("_MainTex", newTexture);
+
+        // Fade back to normal (multiply to 1)
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float value = t;  // goes from 0 to 1
+            tint.r = tint.g = tint.b = value;
+            tint.a = 1.0f;
+            mat.color = tint;
+            yield return null;
+        }
+
+        // Ensure final color is pure (1,1,1)
+        mat.color = Color.white;
+        // if (destroyAfter)
+        // {
+        //     DestroyLetterCube();
+        // }
+    }
+
+    public void PerformFallStep(float? overrideFallSpeed = null)
+    {
+        if (!downColliding())
+        {
+            if (overrideFallSpeed.HasValue)
+            {
+                fallSpeed = overrideFallSpeed.Value;
+            }
+            // Safe step to next grid Y
+            float nextY = Mathf.Floor(transform.position.y - 1);
+            float maxStep = Time.deltaTime * fallSpeed;
+            float newY = Mathf.Max(transform.position.y - maxStep, nextY);
+
+            transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+
+            hasRegisteredLastDownCollision = false;
+        }
+        // else
+        // {
+        //     fallSpeed = 2f;
+
+        //     float roundedY = Mathf.Floor(transform.position.y);
+        //     transform.position = new Vector3(transform.position.x, roundedY, transform.position.z);
+
+        //     if (!hasRegisteredLastDownCollision)
+        //     {
+        //         if (!LetterCubeDataSet.SharedInstance.inUse)
+        //         {
+        //             LetterCubeDataSet.SharedInstance.AddLetterCube(new Vector2(transform.position.x, transform.position.y), transform.gameObject);
+        //             hasRegisteredLastDownCollision = true;    
+        //         }
+        //     }
+        // }
+        else
+        {
+            
+
+            float targetY = Mathf.Floor(transform.position.y);
+            float currentY = transform.position.y;
+
+            // If not yet close enough → keep falling smoothly
+            if (Mathf.Abs(currentY - targetY) > settleThreshold)
+            {
+                float maxStep = Time.deltaTime * fallSpeed;
+                float newY = Mathf.MoveTowards(currentY, targetY, maxStep);
+
+                transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+            }
+            else
+            {
+                // Close enough → snap exactly to grid and register
+                transform.position = new Vector3(transform.position.x, targetY, transform.position.z);
+                fallSpeed = 2f;
+                if (!hasRegisteredLastDownCollision)
+                {
+                    if (!LetterCubeDataSet.SharedInstance.inUse)
+                    {
+                        LetterCubeDataSet.SharedInstance.AddLetterCube(new Vector2(transform.position.x, transform.position.y), transform.gameObject);
+                        hasRegisteredLastDownCollision = true;    
+                    }
+                }
+            }
+        }
+    }
+
+    // Update is called once per fram
+    void Update()
+    {
+
     }
 
 }

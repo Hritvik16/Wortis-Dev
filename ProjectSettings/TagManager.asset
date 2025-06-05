@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 2
   tags:
   - letterSelectQuad
+  - letter_cube
+  - difficulty_selector
   layers:
   - Default
   - TransparentFX

@@ -17,14 +17,18 @@ public class LetterSelectQuadController : MonoBehaviour
         mat.SetTexture("_MainTex", texture);
         transform.gameObject.GetComponent<MeshRenderer>().material = mat;
     }
-
-    private void OnMouseOver()
+    public string getLetter()
     {
-
-        if(letter != null && Input.GetButton("Fire1")) 
-        {
-            gameController.GetComponent<GameController>().RotateCurrentCubeToLetter(letter);
-        }
-        
+        return letter;
     }
+
+    // private void OnMouseOver()
+    // {
+
+    //     if(letter != null && Input.GetButton("Fire1")) 
+    //     {
+    //         gameController.GetComponent<GameController>().RotateCurrentCubeToLetter(letter);
+    //     }
+        
+    // }
 }
