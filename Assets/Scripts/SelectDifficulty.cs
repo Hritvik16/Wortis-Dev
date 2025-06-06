@@ -5,7 +5,7 @@ using UnityEngine;
 public class SelectDifficulty : MonoBehaviour
 {
 
-    public int validwordLength = 5;
+    public int validWordLength;
     // Start is called before the first frame update
     void Start()
     {
@@ -28,10 +28,12 @@ public class SelectDifficulty : MonoBehaviour
 
                 if (Physics.Raycast(ray, out hit))
                 {
-                    if (hit.collider.tag.Equals("difficulty_selector"))
+                    if (hit.collider.gameObject == transform.gameObject)//.Equals("difficulty_selector"))
                     {
-                        Debug.Log("Attempting to set difficulty to " + validwordLength);
-                        LetterCubeDataSet.StartingMinimumWordLength = validwordLength;
+                        Debug.Log("Attempting to set difficulty to " + validWordLength);
+                        GameSettings.Instance.StartingMinimumWordLength = validWordLength;
+                        Debug.Log("Difficulty set to " + GameSettings.Instance.StartingMinimumWordLength);
+                        // LetterCubeDataSet.StartingMinimumWordLength = validwordLength;
                         UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
 
                     }

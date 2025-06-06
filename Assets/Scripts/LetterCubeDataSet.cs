@@ -56,7 +56,7 @@ public class LetterCubeDataSet : MonoBehaviour
 
     private bool gameOver = false;
 
-    public static int StartingMinimumWordLength = 5;
+    // public static int StartingMinimumWordLength = 5;
     public int minimumValidLength = 3;
     // private int minimumValidLength = 5;
 
@@ -78,7 +78,7 @@ public class LetterCubeDataSet : MonoBehaviour
     void Start()
     {
         validWordSet = WordLoader.LoadWords();
-        minimumValidLength = StartingMinimumWordLength;
+        minimumValidLength = GameSettings.Instance.StartingMinimumWordLength;
         letterCubeDataSet.Clear();
         // Debug.Log(validWordSet.Count);
     }
