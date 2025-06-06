@@ -65,19 +65,17 @@ public class LetterCubeController : MonoBehaviour
 
     public QuadInfo[] children = new QuadInfo[6];
 
-    // private bool canRotate = true;
-    // private bool canMove = true;
-
-    // private bool isCurrentLetterCube;
-
     public Color color;
+
+    public float targetY;
+    public bool isTargetFallActive;
 
     bool transparent = false;
 
 
     private bool hasStarted = false;
 
-    private bool hasRegisteredLastDownCollision = false;
+    public bool hasRegisteredLastDownCollision = false;
 
     private const float settleThreshold = 0.02f;
 
@@ -90,6 +88,9 @@ public class LetterCubeController : MonoBehaviour
 
     void Start()
     {
+
+        targetY = Mathf.Floor(transform.position.y);
+
         
         MeshRenderer[] faces = transform.GetComponentsInChildren<MeshRenderer>();
         
@@ -540,55 +541,133 @@ public class LetterCubeController : MonoBehaviour
 
     public void PerformFallStep(float? overrideFallSpeed = null)
     {
-        if (!downColliding())
+        float cappedDeltaTime = Mathf.Min(Time.deltaTime, 1f / 60f); // Clamp to ~16 ms max
+        float maxStep = cappedDeltaTime * fallSpeed;
+
+        if (isTargetFallActive)
         {
-            if (overrideFallSpeed.HasValue)
-            {
-                fallSpeed = overrideFallSpeed.Value;
-            }
-            // Safe step to next grid Y
-            float nextY = Mathf.Floor(transform.position.y - 1);
-            // float maxStep = Time.deltaTime * fallSpeed;
-            // float newY = Mathf.Max(transform.position.y - maxStep, nextY);
-
-            float cappedDeltaTime = Mathf.Min(Time.deltaTime, 1f / 60f); // Clamp to ~16 ms max
-            float maxStep = cappedDeltaTime * fallSpeed;
-            float newY = Mathf.Max(transform.position.y - maxStep, nextY);
-
-
+            // Gold standard fall to targetY
+            float newY = Mathf.MoveTowards(transform.position.y, targetY, maxStep);
             transform.position = new Vector3(transform.position.x, newY, transform.position.z);
 
-            hasRegisteredLastDownCollision = false;
+            // Once reached targetY AND downColliding() confirms support below
+            if (Mathf.Abs(transform.position.y - targetY) < settleThreshold && downColliding())
+            {
+                isTargetFallActive = false;
+                hasRegisteredLastDownCollision = false; // re-trigger AddLetterCube next frame
+            }
         }
         else
-        {            
-            float targetY = Mathf.Floor(transform.position.y);
-            float currentY = transform.position.y;
-
-            // If not yet close enough → keep falling smoothly
-            if (Mathf.Abs(currentY - targetY) > settleThreshold)
+        {
+            if (!downColliding())
             {
-                float maxStep = Time.deltaTime * fallSpeed;
-                float newY = Mathf.MoveTowards(currentY, targetY, maxStep);
+                if (overrideFallSpeed.HasValue)
+                {
+                    fallSpeed = overrideFallSpeed.Value;
+                }
+
+                // Normal fall — target is grid floor
+                float nextY = Mathf.Floor(transform.position.y - 1);
+                float newY = Mathf.Max(transform.position.y - maxStep, nextY);
 
                 transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+
+                hasRegisteredLastDownCollision = false;
             }
             else
             {
-                // Close enough → snap exactly to grid and register
-                transform.position = new Vector3(transform.position.x, targetY, transform.position.z);
-                fallSpeed = 2f;
-                if (!hasRegisteredLastDownCollision)
+                // Normal settle — toward grid floor (NOT targetY here!)
+                float gridTargetY = Mathf.Floor(transform.position.y);
+                float currentY = transform.position.y;
+
+                if (Mathf.Abs(currentY - gridTargetY) > settleThreshold)
                 {
-                    if (!LetterCubeDataSet.SharedInstance.inUse)
+                    float newY = Mathf.MoveTowards(currentY, gridTargetY, maxStep);
+
+                    transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+                }
+                else
+                {
+                    // Close enough → snap exactly to grid and register
+                    transform.position = new Vector3(transform.position.x, gridTargetY, transform.position.z);
+                    fallSpeed = 2f;
+                    if (!hasRegisteredLastDownCollision)
                     {
-                        LetterCubeDataSet.SharedInstance.AddLetterCube(new Vector2(transform.position.x, transform.position.y), transform.gameObject);
-                        hasRegisteredLastDownCollision = true;    
+                        if (!LetterCubeDataSet.SharedInstance.inUse)
+                        {
+                            LetterCubeDataSet.SharedInstance.AddLetterCube(new Vector2(transform.position.x, transform.position.y), transform.gameObject);
+                            hasRegisteredLastDownCollision = true;
+                        }
                     }
                 }
             }
         }
     }
+
+
+    // public void PerformFallStep(float? overrideFallSpeed = null)
+    // {
+    //     float cappedDeltaTime = Mathf.Min(Time.deltaTime, 1f / 60f); // Clamp to ~16 ms max
+    //     float maxStep = cappedDeltaTime * fallSpeed;
+    //     if (isTargetFallActive)
+    //     {
+    //         // Gold standard fall to targetY
+    //         float newY = Mathf.MoveTowards(transform.position.y, targetY, maxStep);
+    //         transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+
+    //         // Once reached targetY AND downColliding() confirms support below
+    //         if (Mathf.Abs(transform.position.y - targetY) < settleThreshold && downColliding())
+    //         {
+    //             isTargetFallActive = false;
+    //             hasRegisteredLastDownCollision = false; // re-trigger AddLetterCube next frame
+    //         }
+    //     }
+    //     else
+    //     {
+    //         if (!downColliding())
+    //         {
+    //             if (overrideFallSpeed.HasValue)
+    //             {
+    //                 fallSpeed = overrideFallSpeed.Value;
+    //             }
+    //             // Safe step to next grid Y
+    //             float nextY = Mathf.Floor(transform.position.y - 1);
+    //             float newY = Mathf.Max(transform.position.y - maxStep, nextY);
+
+
+    //             transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+
+    //             hasRegisteredLastDownCollision = false;
+    //         }
+    //         else
+    //         {
+    //             // targetY = Mathf.Floor(transform.position.y);
+    //             float currentY = transform.position.y;
+
+    //             // If not yet close enough → keep falling smoothly
+    //             if (Mathf.Abs(currentY - targetY) > settleThreshold)
+    //             {                    
+    //                 float newY = Mathf.MoveTowards(currentY, targetY, maxStep);
+
+    //                 transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+    //             }
+    //             else
+    //             {
+    //                 // Close enough → snap exactly to grid and register
+    //                 transform.position = new Vector3(transform.position.x, targetY, transform.position.z);
+    //                 fallSpeed = 2f;
+    //                 if (!hasRegisteredLastDownCollision)
+    //                 {
+    //                     if (!LetterCubeDataSet.SharedInstance.inUse)
+    //                     {
+    //                         LetterCubeDataSet.SharedInstance.AddLetterCube(new Vector2(transform.position.x, transform.position.y), transform.gameObject);
+    //                         hasRegisteredLastDownCollision = true;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     // Update is called once per fram
     void Update()

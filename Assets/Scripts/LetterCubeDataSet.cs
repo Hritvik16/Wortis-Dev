@@ -41,7 +41,7 @@ public class LetterCubeDataSet : MonoBehaviour
     Dictionary<Vector2, LetterCubeData> letterCubeDataSet = new Dictionary<Vector2, LetterCubeData>();
 
     private HashSet<string> validWordSet;
-    
+
     private int minXSpawnPoint = -2;
     private int maxXSpawnPoint = 2;
 
@@ -89,7 +89,7 @@ public class LetterCubeDataSet : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     // public (bool, int) isBeyondAvailableSpot(int x, float y, GameObject letterCube)
@@ -99,11 +99,11 @@ public class LetterCubeDataSet : MonoBehaviour
     //         // Debug.Log($"Letter cube at position {new Vector2(x, y)} already exists with a different letter cube. Returning.");
     //         return (false, -1);
     //     }
-        
+
     //     return ((int)y <= columnToHeight[x], columnToHeight[x] + 1);  
     // }
-  
-    
+
+
     // public int getFirstAvailableY(int x)
     // {
     //     int y = 1;
@@ -120,7 +120,7 @@ public class LetterCubeDataSet : MonoBehaviour
     {
         return letterCubeDataSet.ContainsKey(position);
     }
-    
+
     public void addPoints(int points)
     {
         totalPoints += points;
@@ -228,10 +228,10 @@ public class LetterCubeDataSet : MonoBehaviour
             StartCoroutine(DelayedRemovalOfRowAt(y));
         }
     }
-    
+
     public void AddLetterCube(Vector2 position, GameObject letterCube)
     {
-        if(position. y > 7) gameOver = true;
+        if (position.y > 7) gameOver = true;
         // SANITY CHEKS
         if (position.y - 1 > 0 && !letterCubeDataSet.ContainsKey(new Vector2(position.x, position.y - 1)))
         {
@@ -312,8 +312,44 @@ public class LetterCubeDataSet : MonoBehaviour
             letterCube.GetComponent<LetterCubeController>().DestroyLetterCube();
             // columnToHeight[(int)letterCube.transform.position.x] = startY - 1;
         }
+        UpdateTargetYForCubesAbove(startY, startX, maxX);
 
     }
+    
+    public void UpdateTargetYForCubesAbove(int clearedRowY, int startX, int endX)
+    {
+        for (int x = startX; x <= endX; x++)
+        {
+            for (int y = clearedRowY + 1; y <= 7; y++)
+            {
+                Vector2 pos = new Vector2(x, y);
+
+                if (letterCubeDataSet.ContainsKey(pos))
+                {
+                    GameObject cubeGO = letterCubeDataSet[pos].letterCube;
+                    LetterCubeController cube = cubeGO.GetComponent<LetterCubeController>();
+
+                    // One row gap → simple
+                    float newTargetY = y - 1;
+
+                    if (Mathf.Abs(cube.targetY - newTargetY) > 0.01f || !cube.isTargetFallActive)
+                    {
+                        cube.targetY = newTargetY;
+                        cube.isTargetFallActive = true;
+                        cube.fallSpeed = 2f;
+                        cube.hasRegisteredLastDownCollision = false;
+                    }
+                }
+                else
+                {
+                    // No more cubes in this column above → stop
+                    break;
+                }
+            }
+        }
+    }
+
+
 }
 
 
