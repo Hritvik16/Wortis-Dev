@@ -546,33 +546,20 @@ public class LetterCubeController : MonoBehaviour
             }
             // Safe step to next grid Y
             float nextY = Mathf.Floor(transform.position.y - 1);
-            float maxStep = Time.deltaTime * fallSpeed;
+            // float maxStep = Time.deltaTime * fallSpeed;
+            // float newY = Mathf.Max(transform.position.y - maxStep, nextY);
+
+            float cappedDeltaTime = Mathf.Min(Time.deltaTime, 1f / 60f); // Clamp to ~16 ms max
+            float maxStep = cappedDeltaTime * fallSpeed;
             float newY = Mathf.Max(transform.position.y - maxStep, nextY);
+
 
             transform.position = new Vector3(transform.position.x, newY, transform.position.z);
 
             hasRegisteredLastDownCollision = false;
         }
-        // else
-        // {
-        //     fallSpeed = 2f;
-
-        //     float roundedY = Mathf.Floor(transform.position.y);
-        //     transform.position = new Vector3(transform.position.x, roundedY, transform.position.z);
-
-        //     if (!hasRegisteredLastDownCollision)
-        //     {
-        //         if (!LetterCubeDataSet.SharedInstance.inUse)
-        //         {
-        //             LetterCubeDataSet.SharedInstance.AddLetterCube(new Vector2(transform.position.x, transform.position.y), transform.gameObject);
-        //             hasRegisteredLastDownCollision = true;    
-        //         }
-        //     }
-        // }
         else
-        {
-            
-
+        {            
             float targetY = Mathf.Floor(transform.position.y);
             float currentY = transform.position.y;
 
