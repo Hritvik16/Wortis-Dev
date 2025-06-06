@@ -10,6 +10,9 @@ public class LetterCubeDataSet : MonoBehaviour
 
     public static LetterCubeDataSet SharedInstance { get; private set; }
 
+    public List<LetterCubeController> activeLetterCubes = new List<LetterCubeController>();
+
+
     public class LetterCubeData
     {
 

@@ -489,6 +489,8 @@ public class LetterCubeController : MonoBehaviour
     {
         // Calculate points here using front letter
         LetterCubeDataSet.SharedInstance.addPoints(letterToPoints[getLetterInFront()]);
+        LetterCubeDataSet.SharedInstance.activeLetterCubes.Remove(this);//letterCube.GetComponent<LetterCubeController>());
+
         Destroy(gameObject);
     }
     

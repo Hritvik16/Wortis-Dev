@@ -75,7 +75,11 @@ public class GameManager : MonoBehaviour
         Vector3 InstantiatePosition = new Vector3(Random.Range(minXSpawnPoint, maxXSpawnPoint), ySpawnPoint, zSpawnPoint);
         Quaternion InstantiateQuaternion = new Quaternion(0f, 0f, 0f, 0f);
         currentLetterCube = Instantiate(letterCube, InstantiatePosition, InstantiateQuaternion);
-        while(!currentLetterCube.activeInHierarchy) {}
+
+
+        LetterCubeDataSet.SharedInstance.activeLetterCubes.Add(currentLetterCube.GetComponent<LetterCubeController>());
+
+        while (!currentLetterCube.activeInHierarchy) { }
 
         // UpdateLetterSelectQuads(currentLetterCube);
         StartCoroutine(RunFunctionAfterFrameEnds(() => UpdateLetterSelectQuads(currentLetterCube)));
@@ -209,9 +213,10 @@ public class GameManager : MonoBehaviour
     {
         LetterCubeController[] cubes = GameObject.FindObjectsOfType<LetterCubeController>();
 
-        LetterCubeController[] orderedCubes = cubes
-            .OrderBy(cube => cube.transform.position.y)
-            .ToArray();
+        LetterCubeController[] orderedCubes = LetterCubeDataSet.SharedInstance.activeLetterCubes
+        .OrderBy(cube => cube.transform.position.y)
+        .ToArray();
+
 
         bool allSettled = true;
 
